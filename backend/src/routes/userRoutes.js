@@ -4,6 +4,8 @@ const multer = require('multer');
 const userController = require('../controllers/userController');
 const { verifyToken, checkRole } = require('../middleware/auth');
 
+const upload = multer({ storage: multer.memoryStorage() });
+
 // Public route but restricted logic inside controller
 router.get('/profile/:userId', verifyToken, userController.getUserProfile);
 
@@ -11,6 +13,7 @@ router.get('/profile/:userId', verifyToken, userController.getUserProfile);
 router.get('/wallet', verifyToken, checkRole(['normal', 'admin', 'central_admin']), userController.getWalletBalance);
 router.post('/unlock', verifyToken, userController.unlockPremiumContact);
 router.post('/withdraw', verifyToken, userController.requestWithdrawal);
+
 router.post('/kyc-submit', verifyToken, upload.array('documents', 2), userController.submitKYC);
 
 module.exports = router;
