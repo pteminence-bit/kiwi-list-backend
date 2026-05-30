@@ -5,17 +5,17 @@ const multer = require('multer');
 const listingController = require('../controllers/listingController');
 const { verifyToken } = require('../middleware/auth');
 
-// Memory storage is best for Render's ephemeral file system
+// Memory storage is best for Render to avoid local disk issues
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit safety
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit per image
 });
 
 // Public Routes
 router.get('/random-feed', listingController.getRandomFeed);
 
 // Protected Routes
-// 'images' is the field name the frontend should use in the FormData
+// 'images' is the key name your frontend should use in the FormData
 router.post('/create', verifyToken, upload.array('images', 5), listingController.createListing);
 
 router.post('/report', verifyToken, listingController.reportListing);
