@@ -28,4 +28,38 @@ router.get('/feed', async (req, res) => {
     res.status(500).json({ message: "Server error generating feed", error: error.message });
   }
 });
+
+router.post('/unlock/:id', async (req, res) => {
+  const listingId = req.params.id;
+  const userId = req.user.uid; // From your Auth middleware
+  const UNLOCK_FEE = 500;
+
+  try {
+    const user = await User.findOne({ firebaseUid: userId });
+    const listing = await Listing.findById(listingId);
+
+    // 1. Check if already unlocked
+    if (user.unlockedContacts.includes(listingId)) {
+      return res.status(200).json({ contact: listing.phoneNumber });
+    }
+
+    // 2. Verify funds
+    if (user.walletBalance < UNLOCK_FEE) {
+      return res.status(403).json({ message: "Insufficient balance. Please top up ₦3,000 minimum." });
+    }
+
+    // 3. Atomic Transaction (Simplified for this sprint)
+    user.walletBalance -= UNLOCK_FEE;
+    user.unlockedContacts.push(listingId);
+    
+    await user.save();
+
+    res.status(200).json({ 
+      contact: listing.phoneNumber, 
+      newBalance: user.walletBalance 
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Transaction failed", error: error.message });
+  }
+});
 module.exports = router;
