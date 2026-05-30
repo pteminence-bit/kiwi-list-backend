@@ -1,22 +1,25 @@
 // src/config/firebase.js
 const admin = require('firebase-admin');
 
-const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+const base64Credentials = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
 
-if (!serviceAccountEnv) {
-    console.error("❌ Failed to initialize Firebase Admin: Missing FIREBASE_SERVICE_ACCOUNT_JSON environment variable.");
+if (!base64Credentials) {
+    console.error("❌ Failed to initialize Firebase Admin: Missing FIREBASE_SERVICE_ACCOUNT_B64 environment variable.");
     process.exit(1);
 }
 
 try {
-    // Parse the minified string safely
-    const serviceAccount = JSON.parse(serviceAccountEnv);
+    // Decode the safe Base64 string directly back into a standard utf8 text stream
+    const decodedJsonText = Buffer.from(base64Credentials, 'base64').toString('utf8');
+    
+    // Parse the recovered clean string format
+    const serviceAccount = JSON.parse(decodedJsonText);
 
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
     });
     
-    console.log("🔥 Firebase Admin SDK initialized successfully.");
+    console.log("🔥 Firebase Admin SDK initialized successfully via Base64 recovery.");
 } catch (error) {
     console.error("❌ Firebase Initialization Error:", error.message);
     process.exit(1);
