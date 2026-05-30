@@ -1,4 +1,3 @@
-// src/controllers/listingController.js
 const { db, admin } = require('../config/firebase');
 const { uploadToR2 } = require('../config/storage');
 
@@ -8,7 +7,6 @@ exports.createListing = async (req, res) => {
     const PREMIUM_PRICE = 3000;
 
     try {
-        // Handle images first - don't charge user if upload fails
         const imageUrls = req.files && req.files.length > 0 
             ? await Promise.all(req.files.map(file => uploadToR2(file)))
             : [];
@@ -17,7 +15,6 @@ exports.createListing = async (req, res) => {
         const userRef = db.collection('users').doc(userId);
         const listingRef = db.collection('listings').doc(listingId);
 
-        // Use a Transaction for the entire creation process if it's Premium
         await db.runTransaction(async (transaction) => {
             const userDoc = await transaction.get(userRef);
             if (!userDoc.exists) throw new Error("User not found");
@@ -52,7 +49,6 @@ exports.createListing = async (req, res) => {
         });
 
         res.status(201).json({ id: listingId, message: "Listing created successfully" });
-
     } catch (error) {
         console.error("Create Listing Error:", error);
         res.status(400).json({ error: error.message });
@@ -62,7 +58,6 @@ exports.createListing = async (req, res) => {
 exports.getRandomFeed = async (req, res) => {
     try {
         const randomStart = Math.random();
-        // Query 1: Seed >= Start
         let snapshot = await db.collection('listings')
             .where('availability', '==', true)
             .where('randomSeed', '>=', randomStart)
@@ -70,7 +65,6 @@ exports.getRandomFeed = async (req, res) => {
 
         let listings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Wrap around logic if less than 10 found
         if (listings.length < 10) {
             let extraSnapshot = await db.collection('listings')
                 .where('availability', '==', true)
@@ -104,13 +98,9 @@ exports.reportListing = async (req, res) => {
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            // Increment flags and check status atomically
             transaction.update(ownerRef, {
                 flags: admin.firestore.FieldValue.increment(1)
             });
-
-            // Logic Note: To strictly restrict at 3 flags, we'd check the incremented value, 
-            // but for simplicity in transactions, we let the next check catch it or use a Cloud Function.
         });
 
         res.status(200).json({ message: "Report submitted." });

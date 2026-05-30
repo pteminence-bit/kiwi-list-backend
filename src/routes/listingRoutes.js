@@ -4,11 +4,7 @@ const multer = require('multer');
 const listingController = require('../controllers/listingController');
 const { verifyToken } = require('../middleware/auth');
 
-// Memory storage prevents local disk issues on Render
-const upload = multer({ 
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit per image
-});
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Public Routes
 router.get('/random-feed', listingController.getRandomFeed);
