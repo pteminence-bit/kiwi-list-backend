@@ -1,22 +1,25 @@
 // src/config/firebase.js
 const admin = require('firebase-admin');
 
-try {
-    if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-        throw new Error("Missing FIREBASE_SERVICE_ACCOUNT_JSON environment variable.");
-    }
+const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
-    // Parse the raw JSON string directly from your environment variables
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+if (!serviceAccountEnv) {
+    console.error("❌ Failed to initialize Firebase Admin: Missing FIREBASE_SERVICE_ACCOUNT_JSON environment variable.");
+    process.exit(1);
+}
+
+try {
+    // Parse the minified string safely
+    const serviceAccount = JSON.parse(serviceAccountEnv);
 
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
     });
-
-    console.log("🔥 Firebase Admin initialized successfully using Environment String!");
+    
+    console.log("🔥 Firebase Admin SDK initialized successfully.");
 } catch (error) {
-    console.error("❌ Failed to initialize Firebase Admin:", error.message);
-    process.exit(1); // Stop the server immediately if DB configuration fails
+    console.error("❌ Firebase Initialization Error:", error.message);
+    process.exit(1);
 }
 
 const db = admin.firestore();
