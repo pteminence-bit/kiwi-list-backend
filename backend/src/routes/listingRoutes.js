@@ -7,15 +7,16 @@ const { verifyToken } = require('../middleware/auth');
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/', verifyToken, upload.array('images', 5), listingController.createListing);
-// Example backend controller update for /api/listings/feed
-router.get('/feed', async (req, res) => {
-  try {
-    const count = await Listing.countDocuments();
-    
-    // If the database is empty, return an empty array instantly instead of trying to sample
-    if (count === 0) {
-      return res.status(200).json([]);
+// Example backend controller update for /api/listings/feed 
+router.get('/feed', verifyToken, async (req, res) => {
+    try {
+        const userId = req.user?.uid; // Might be null for guests
+        // Your logic...
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
     }
+});
 
     // Your existing aggregation logic
     const listings = await Listing.aggregate([
